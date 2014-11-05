@@ -18,7 +18,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
       link: function(scope, elem) {
         var dashboard = scope.dashboard;
         var data, annotations;
-        var legendSideLastValue = null;
         scope.crosshairEmiter = false;
 
         scope.$on('refresh', function() {
@@ -49,10 +48,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
 
             height -= scope.panel.title ? 24 : 9; // subtract panel title bar
 
-            if (scope.panel.legend.show && !scope.panel.legend.rightSide) {
-              height = height - 21; // subtract one line legend
-            }
-
             elem.css('height', height + 'px');
 
             return true;
@@ -72,11 +67,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
 
           if (!setElementHeight()) { return true; }
 
-          if (_.isString(data)) {
-            render_panel_as_graphite_png(data);
-            return true;
-          }
-
           if (elem.width() === 0) {
             return;
           }
@@ -84,7 +74,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
 
         function updateLegendValues(plot) {
           var yaxis = plot.getYAxes();
-
           for (var i = 0; i < data.length; i++) {
             var series = data[i];
             var axis = yaxis[series.yaxis - 1];
@@ -101,39 +90,20 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
           }
 
           var panel = scope.panel;
-          var stack = panel.stack ? true : null;
 
           // Populate element
           var options = {
             hooks: { draw: [updateLegendValues] },
             legend: { show: false },
             series: {
-              stackpercent: panel.stack ? panel.percentage : false,
-              stack: panel.percentage ? null : stack,
-              lines:  {
-                show: panel.lines,
-                zero: false,
-                fill: translateFillOption(panel.fill),
-                lineWidth: panel.linewidth,
-                steps: panel.steppedLine
-              },
-              bars:   {
-                show: panel.bars,
-                fill: 1,
-                barWidth: 1,
-                zero: false,
-                lineWidth: 0
-              },
-              points: {
-                show: panel.points,
-                fill: 1,
-                fillColor: false,
-                radius: panel.points ? panel.pointradius : 2
-                // little points when highlight points
-              },
-              shadowSize: 1
+              horizon: panel.horizon
             },
-            yaxes: [],
+            yaxes: [{
+              position: 'left',
+              show: false,
+              min: null,
+              max: null
+            }],
             xaxis: {},
             grid: {
               minBorderMargin: 0,
@@ -141,7 +111,7 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
               backgroundColor: 'white',
               borderWidth: 0,
               hoverable: true,
-              color: '#c8c8c8'
+              color: 'white'
             },
             selection: {
               mode: "x",
@@ -164,39 +134,29 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
           }
 
           addTimeAxis(options);
-          addGridThresholds(options, panel);
           addAnnotations(options);
           configureAxisOptions(data, options);
-
-          options.series = {
-            horizon: {
-              bands: 6
-            }
-          };
+          // TODO:
+          // configureHorizonOptions(options);
 
           var sortedSeries = _.sortBy(data, function(series) { return series.zindex; });
 
-          var config = {
-            horizonHeight: 40,
-            axisHeight: 25,
-            marginBottom: 2
-          };
-          elem.data(config);
+          elem.data(options.series.horizon);
 
           function callPlot() {
             // console.log( options );
-            elem.css( 'height', ( sortedSeries.length * config.horizonHeight + config.axisHeight ) + 'px');
+            elem.css( 'height', ( sortedSeries.length * options.series.horizon.horizonHeight + options.series.horizon.axisHeight ) + 'px');
             try {
-              // console.log( elem );
               elem.html( '' );
+              // console.log( sortedSeries );
               _.each(sortedSeries, function(serie, el) {
                 // console.log( serie );
                 if ( options.xaxis ) {
                   options.xaxis.show = ( el === sortedSeries.length - 1 );
                 }
-                var serieHeight = ( options.xaxis.show ) ? config.horizonHeight + config.axisHeight : config.horizonHeight;
+                var serieHeight = ( options.xaxis.show ) ? options.series.horizon.horizonHeight + options.series.horizon.axisHeight : options.series.horizon.horizonHeight;
                 var $g = $( '<div>' ).data( 'pos', el ).addClass( 'horizon-tooltip' );
-                $g.css({ 'height': serieHeight+'px', 'margin-bottom': config.marginBottom+'px' });
+                $g.css({ 'height': serieHeight+'px', 'margin-bottom': options.series.horizon.marginBottom+'px' });
                 if ( !options.xaxis.show ) {
                   $g.css({ 'margin-left': '14px', 'margin-right': '14px' });
                 }
@@ -206,31 +166,9 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             } catch (e) {
               console.log('flotcharts error', e);
             }
-
-            addAxisLabels();
           }
 
-          if (shouldDelayDraw(panel)) {
-            setTimeout(callPlot, 50);
-            legendSideLastValue = panel.legend.rightSide;
-          }
-          else {
-            callPlot();
-          }
-        }
-
-        function translateFillOption(fill) {
-          return fill === 0 ? 0.001 : fill/10;
-        }
-
-        function shouldDelayDraw(panel) {
-          if (panel.legend.rightSide) {
-            return true;
-          }
-          if (legendSideLastValue !== null && panel.legend.rightSide !== legendSideLastValue) {
-            return true;
-          }
-          return false;
+          callPlot();
         }
 
         function addTimeAxis(options) {
@@ -240,7 +178,7 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
 
           options.xaxis = {
             timezone: dashboard.timezone,
-            show: scope.panel['x-axis'],
+            show: false,
             mode: "time",
             min: min,
             max: max,
@@ -248,29 +186,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             ticks: ticks,
             timeformat: time_format(scope.interval, ticks, min, max),
           };
-        }
-
-        function addGridThresholds(options, panel) {
-          if (panel.grid.threshold1) {
-            var limit1 = panel.grid.thresholdLine ? panel.grid.threshold1 : (panel.grid.threshold2 || null);
-            options.grid.markings.push({
-              yaxis: { from: panel.grid.threshold1, to: limit1 },
-              color: panel.grid.threshold1Color
-            });
-
-            if (panel.grid.threshold2) {
-              var limit2;
-              if (panel.grid.thresholdLine) {
-                limit2 = panel.grid.threshold2;
-              } else {
-                limit2 = panel.grid.threshold1 > panel.grid.threshold2 ?  -Infinity : +Infinity;
-              }
-              options.grid.markings.push({
-                yaxis: { from: panel.grid.threshold2, to: limit2 },
-                color: panel.grid.threshold2Color
-              });
-            }
-          }
         }
 
         function addAnnotations(options) {
@@ -306,19 +221,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             data: annotations,
             types: types
           };
-        }
-
-        function addAxisLabels() {
-          if (scope.panel.leftYAxisLabel) {
-            elem.css('margin-left', '10px');
-            var yaxisLabel = $("<div class='axisLabel yaxisLabel'></div>")
-              .text(scope.panel.leftYAxisLabel)
-              .appendTo(elem);
-
-            yaxisLabel.css("margin-top", yaxisLabel.width() / 2 - 20);
-          } else if (elem.css('margin-left')) {
-            elem.css('margin-left', '');
-          }
         }
 
         function configureAxisOptions(data, options) {
@@ -369,56 +271,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
           }
 
           return "%H:%M";
-        }
-
-        function render_panel_as_graphite_png(url) {
-          url += '&width=' + elem.width();
-          url += '&height=' + elem.css('height').replace('px', '');
-          url += '&bgcolor=1f1f1f'; // @grayDarker & @grafanaPanelBackground
-          url += '&fgcolor=BBBFC2'; // @textColor & @grayLighter
-          url += scope.panel.stack ? '&areaMode=stacked' : '';
-          url += scope.panel.fill !== 0 ? ('&areaAlpha=' + (scope.panel.fill/10).toFixed(1)) : '';
-          url += scope.panel.linewidth !== 0 ? '&lineWidth=' + scope.panel.linewidth : '';
-          url += scope.panel.legend.show ? '&hideLegend=false' : '&hideLegend=true';
-          url += scope.panel.grid.leftMin !== null ? '&yMin=' + scope.panel.grid.leftMin : '';
-          url += scope.panel.grid.leftMax !== null ? '&yMax=' + scope.panel.grid.leftMax : '';
-          url += scope.panel.grid.rightMin !== null ? '&yMin=' + scope.panel.grid.rightMin : '';
-          url += scope.panel.grid.rightMax !== null ? '&yMax=' + scope.panel.grid.rightMax : '';
-          url += scope.panel['x-axis'] ? '' : '&hideAxes=true';
-          url += scope.panel['y-axis'] ? '' : '&hideYAxis=true';
-
-          switch(scope.panel.y_formats[0]) {
-          case 'bytes':
-            url += '&yUnitSystem=binary';
-            break;
-          case 'bits':
-            url += '&yUnitSystem=binary';
-            break;
-          case 'bps':
-            url += '&yUnitSystem=si';
-            break;
-          case 'short':
-            url += '&yUnitSystem=si';
-            break;
-          case 'none':
-            url += '&yUnitSystem=none';
-            break;
-          }
-
-          switch(scope.panel.nullPointMode) {
-          case 'connected':
-            url += '&lineMode=connected';
-            break;
-          case 'null':
-            break; // graphite default lineMode
-          case 'null as zero':
-            url += "&drawNullAsZero=true";
-            break;
-          }
-
-          url += scope.panel.steppedLine ? '&lineMode=staircase' : '';
-
-          elem.html('<img src="' + url + '"></img>');
         }
 
         new GraphTooltip(elem, dashboard, scope, function() {

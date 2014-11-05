@@ -44,7 +44,7 @@ function ($) {
     };
 
     this.getMultiSeriesPlotHoverInfo = function(seriesList, pos) {
-      var value, i, series, hoverIndex;
+      var i, series, hoverIndex;
       var results = [];
 
       var pointCount = seriesList[0].data.length;
@@ -64,28 +64,17 @@ function ($) {
 
       //now we know the current X (j) position for X and Y values
       results.time = series.data[hoverIndex][0];
-
-      for (i = 0; i < seriesList.length; i++) {
-        series = seriesList[i];
-
-        if ( series.data[hoverIndex][1] ) {
-          value = value || 0;
-          value += series.data[hoverIndex][1];
-        }
-      }
-      results.push({ value: value, hoverIndex: hoverIndex });
+      results.push({ value: seriesList[0].data[hoverIndex][1], hoverIndex: hoverIndex });
 
       return results;
     };
 
     elem.mouseleave(function (event) {
-      if (scope.panel.tooltip.shared || dashboard.sharedCrosshair) {
-        var plot = $(event.target).parent().data().plot;
-        if (plot) {
-          $tooltip.detach();
-          plot.unhighlight();
-          scope.appEvent('clearCrosshair');
-        }
+      var plot = $(event.target).parent().data().plot;
+      if (plot) {
+        $tooltip.detach();
+        plot.unhighlight();
+        scope.appEvent('clearCrosshair');
       }
     });
 
@@ -118,7 +107,7 @@ function ($) {
       series = seriesList[serieIndex];
       if ( series ) {
         hoverInfo = seriesHoverInfo[0];
-        value = series.formatValue(hoverInfo.value, 2, 2);
+        value = Math.round(hoverInfo.value*100)/100;
 
         seriesHtml = '<i class="icon-minus" style="color:' + series.color +';"></i> ' + series.label;
         seriesHtml += ': <span class="graph-tooltip-value">' + hoverInfo.value + '</span>';

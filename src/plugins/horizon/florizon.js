@@ -46,14 +46,14 @@
 			if ( series.horizon && series.horizon.bands ) {
 				var absolute = Math.abs;
 				var maximum = Math.max;
-				var round = Math.round;
+				var floor = Math.floor;
 				var bands = 1 * series.horizon.bands;
 				if ( isNaN( bands ) || bands < 1 ) {
 					throw "Invalid value for bands: " + JSON.stringify( series.horizon.bands );
 				}
-				var max = round( data.reduce( function( a, b ) {
+				var max = data.reduce( function( a, b ) {
 						return [ null, maximum( absolute( a[ 1 ] ), absolute( b[ 1 ] ) ) ];
-					} )[ 1 ] );
+					} )[ 1 ];
 				var positiveSeries = [];
 				var negativeSeries = [];
 				var negativeColors = negativeColorProgress( bands );
@@ -63,8 +63,10 @@
 						data: [],
 						horizon: false,
 						color: positiveColors[ i ],
+						yaxis: 2,
 						lines: {
 							show: true,
+							lineWidth: 0,
 							fill: true,
 							fillColor: positiveColors[ i ]
 						}
@@ -73,35 +75,48 @@
 						data: [],
 						horizon: false,
 						color: negativeColors[ i ],
+						yaxis: 2,
 						lines: {
 							show: true,
+							lineWidth: 0,
 							fill: true,
 							fillColor: negativeColors[ i ]
 						}
 					};
 				}
-				var sliceValue = round( max / bands );
+				var sliceHeight = max / bands;
 				data.forEach( function( point ) {
 					var time = point[ 0 ];
-					var value = round( point[ 1 ] );
-					var nullPoint = [ time, null ];
-					var maxPoint = [ time, sliceValue ];
-					var array = value > 0 ? positiveSeries : negativeSeries;
-					var mirror = value > 0 ? negativeSeries : positiveSeries;
+					var value = point[ 1 ];
+					var nullPoint = [ time, 0 ];
+					var maxPoint = [ time, sliceHeight ];
+					var filledBands = value > 0 ? positiveSeries : negativeSeries;
+					var emptyBands = value > 0 ? negativeSeries : positiveSeries;
 					value = absolute( value );
-					for( var i = 0; i < bands; i++ ) {
-						if ( value <= 0 ) {
-							array[ i ].data.push( nullPoint );
-						} else if ( value >= sliceValue ) {
-							array[ i ].data.push( maxPoint );
-						} else {
-							array[ i ].data.push( [ time, value ] );
-						}
-						value -= sliceValue;
-						mirror[ i ].data.push( nullPoint );
+					var prevBand = floor( value / sliceHeight ) - 1;
+					var band;
+					for( band = 0; band <= prevBand; band++ ) {
+						filledBands[ band ].data.push( maxPoint );
+						emptyBands[ band ].data.push( nullPoint );
+					}
+					if ( band < bands ) {
+						filledBands[ band ].data.push( [ time, value - band * sliceHeight ] );
+						emptyBands[ band ].data.push( nullPoint );
+					}
+					band++;
+					for ( ; band < bands; band++ ) {
+						filledBands[ band ].data.push( nullPoint );
+						emptyBands[ band ].data.push( nullPoint );
 					}
 				} );
-				plot.setData( positiveSeries.concat( negativeSeries ) );
+				plot.setData( [ {
+					data: data,
+					yaxis: 1,
+					horizon: false,
+					lines: {
+						show: false
+					}
+				} ].concat( positiveSeries, negativeSeries ) );
 			}
 		}
 

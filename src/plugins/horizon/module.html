@@ -1,6 +1,6 @@
 <div  ng-controller='HorizonCtrl'>
 
-  <div class="graph-wrapper" ng-class="{'graph-legend-rightside': panel.legend.rightSide}">
+  <div class="graph-wrapper">
       <div class="graph-canvas-wrapper">
 
         <div ng-if="datapointsWarning" class="datapoints-warning">
@@ -15,7 +15,9 @@
 
       <div class="graph-legend-wrapper"
            ng-if="panel.legend.show"
-           ng-include="'app/panels/graph/legend.html'">
+           ng-include="'../plugins/horizon/legend.html'"
+           ng-style="{'top': (-14-panel.horizon.axisHeight-(panel.visibleSeries-1)*(panel.horizon.horizonHeight+panel.horizon.marginBottom))+'px' }"
+           style="position: relative; top: -100px;">
       </div>
   </div>
 
