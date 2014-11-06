@@ -28,7 +28,6 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
   module.controller('GraphCtrl', function($scope, $rootScope, panelSrv, annotationsSrv, timeSrv) {
 
     $scope.panelMeta = {
-      modals : [],
       editorTabs: [],
       fullEditorTabs : [
         {
@@ -346,14 +345,6 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
     $scope.removeSeriesOverride = function(override) {
       $scope.panel.seriesOverrides = _.without($scope.panel.seriesOverrides, override);
       $scope.render();
-    };
-
-    $scope.toggleEditorHelp = function(index) {
-      if ($scope.editorHelpIndex === index) {
-        $scope.editorHelpIndex = null;
-        return;
-      }
-      $scope.editorHelpIndex = index;
     };
 
     panelSrv.init($scope);
