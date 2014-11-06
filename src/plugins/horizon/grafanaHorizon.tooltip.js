@@ -101,18 +101,13 @@ function ($) {
         return;
       }
 
-      seriesHtml = '';
       timestamp = dashboard.formatDate(seriesHoverInfo.time);
 
       series = seriesList[serieIndex];
       if ( series ) {
         hoverInfo = seriesHoverInfo[0];
         value = Math.round(hoverInfo.value*100)/100;
-
-        seriesHtml = '<i class="icon-minus" style="color:' + series.color +';"></i> ' + series.label;
-        seriesHtml += ': <span class="graph-tooltip-value">' + hoverInfo.value + '</span>';
-
-        self.showTooltip(timestamp, seriesHtml, pos);
+        self.showTooltip(timestamp, series.label + ': <strong>' + hoverInfo.value + '</strong>', pos);
       }
     });
   }

@@ -75,6 +75,21 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
        * y_formats :: 'none','bytes','bits','bps','short', 's', 'ms'
        */
       y_formats    : ['none', 'none'],
+      /** @scratch /panels/histogram/5
+       * grid object:: Min and max y-axis values
+       * grid.min::: Minimum y-axis value
+       * grid.ma1::: Maximum y-axis value
+       */
+      grid          : {
+        leftMax: null,
+        rightMax: null,
+        leftMin: null,
+        rightMin: null,
+        threshold1: null,
+        threshold2: null,
+        threshold1Color: 'rgba(216, 200, 27, 0.27)',
+        threshold2Color: 'rgba(234, 112, 112, 0.22)'
+      },
 
       annotate      : {
         enable      : false,
@@ -199,7 +214,7 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
     $scope.render = function(data) {
       var visibleSeries = 0;
       for ( var i = 0 ; i < $scope.panel.targets.length ; i++ ) {
-        if ( $scope.panel.targets[i].hide === false ) {
+        if ( $scope.panel.targets[i].hide !== true ) {
           visibleSeries++;
         }
       }
