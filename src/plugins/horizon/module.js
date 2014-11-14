@@ -46,7 +46,7 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
         },
         {
           title:'Legend',
-          src:'../plugins/horizon/legendEditor.html'
+          src:'plugins/horizon/legendEditor.html'
         }
       ],
       fullscreenEdit: true,
