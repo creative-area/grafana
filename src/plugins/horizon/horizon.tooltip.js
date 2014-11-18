@@ -82,7 +82,7 @@ function ($) {
       var plot = $( event.target ).data().plot;
       var plotData = plot.getData();
       var seriesList = getSeriesFn();
-      var value, timestamp, hoverInfo, series, seriesHtml;
+      var value, timestamp, hoverInfo, series;
 
       if (seriesList.length === 0) {
         return;
@@ -102,7 +102,6 @@ function ($) {
       }
 
       timestamp = dashboard.formatDate(seriesHoverInfo.time);
-
       series = seriesList[serieIndex];
       if ( series ) {
         hoverInfo = seriesHoverInfo[0];

@@ -10,8 +10,6 @@
       },
       // requirejs modules in plugins folder that should be loaded
       // for example custom datasources
-      dependencies: [
-        '../plugins/horizon/grafanaHorizon',
-      ],
+      dependencies: [],
     }
 */

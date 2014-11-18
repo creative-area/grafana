@@ -14,17 +14,14 @@ define([
   'kbn',
   'moment',
   'components/timeSeries',
+  'components/panelmeta',
   'services/panelSrv',
   'services/annotationsSrv',
   'services/datasourceSrv',
-  'jquery.flot',
-  'jquery.flot.florizon',
-  'jquery.flot.events',
-  'jquery.flot.selection',
-  'jquery.flot.time',
-  'jquery.flot.crosshair'
+  'panels/graph/seriesOverridesCtrl',
+  './horizon'
 ],
-function (angular, app, $, _, kbn, moment, TimeSeries) {
+function (angular, app, $, _, kbn, moment, TimeSeries, PanelMeta) {
   'use strict';
 
   var module = angular.module('grafana.panels.horizon', []);
@@ -32,27 +29,16 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
 
   module.controller('HorizonCtrl', function($scope, $rootScope, panelSrv, annotationsSrv, timeSrv) {
 
-    $scope.panelMeta = {
-      modals : [],
-      editorTabs: [],
-      fullEditorTabs : [
-        {
-          title: 'General',
-          src:'app/partials/panelgeneral.html'
-        },
-        {
-          title: 'Metrics',
-          src:'app/partials/metrics.html'
-        },
-        {
-          title:'Legend',
-          src:'plugins/horizon/legendEditor.html'
-        }
-      ],
-      fullscreenEdit: true,
-      fullscreenView: true,
-      description : "Horizon Graph"
-    };
+    $scope.panelMeta = new PanelMeta({
+      description: 'Horizon panel',
+      fullscreen: true,
+      metricsEditor: true
+    });
+
+    $scope.panelMeta.addEditorTab('Legend Editor', 'plugins/horizon/legendEditor.html');
+
+    // $scope.panelMeta.addExtendedMenuItem('Export CSV', '', 'exportCsv()');
+    // $scope.panelMeta.addExtendedMenuItem('Toggle legend', '', 'toggleLegend()');
 
     // Set and populate defaults
     var _d = {
@@ -133,7 +119,12 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
     $scope.updateTimeRange = function () {
       $scope.range = timeSrv.timeRange();
       $scope.rangeUnparsed = timeSrv.timeRange(false);
-      $scope.resolution = Math.ceil($(window).width() * ($scope.panel.span / 12));
+      if ($scope.panel.maxDataPoints) {
+        $scope.resolution = $scope.panel.maxDataPoints;
+      }
+      else {
+        $scope.resolution = Math.ceil($(window).width() * ($scope.panel.span / 12));
+      }
       $scope.interval = kbn.calculateInterval($scope.range, $scope.resolution, $scope.panel.interval);
     };
 
@@ -157,6 +148,7 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
           $scope.panelMeta.loading = false;
           $scope.panelMeta.error = err.message || "Timeseries data request error";
           $scope.inspector.error = err;
+          $scope.seriesList = [];
           $scope.render([]);
         });
     };
@@ -168,22 +160,27 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
       $scope.datapointsCount = 0;
       $scope.datapointsOutside = false;
 
-      var data = _.map(results.data, $scope.seriesHandler);
+      $scope.seriesList = _.map(results.data, $scope.seriesHandler);
 
       $scope.datapointsWarning = $scope.datapointsCount === 0 || $scope.datapointsOutside;
 
       $scope.annotationsPromise
         .then(function(annotations) {
-          data.annotations = annotations;
-          $scope.render(data);
+          $scope.seriesList.annotations = annotations;
+          $scope.render($scope.seriesList);
         }, function() {
-          $scope.render(data);
+          $scope.render($scope.seriesList);
         });
     };
 
     $scope.seriesHandler = function(seriesData, index) {
       var datapoints = seriesData.datapoints;
       var alias = seriesData.target;
+
+      var series = new TimeSeries({
+        datapoints: datapoints,
+        alias: alias,
+      });
 
       var seriesInfo = {
         alias: alias,
@@ -192,11 +189,6 @@ function (angular, app, $, _, kbn, moment, TimeSeries) {
       };
 
       $scope.legend.push(seriesInfo);
-
-      var series = new TimeSeries({
-        datapoints: datapoints,
-        info: seriesInfo
-      });
 
       if (datapoints && datapoints.length > 0) {
         var last = moment.utc(datapoints[datapoints.length - 1][1] * 1000);

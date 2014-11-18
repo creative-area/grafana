@@ -4,7 +4,13 @@ define([
   'kbn',
   'moment',
   'lodash',
-  './grafanaHorizon.tooltip'
+  './horizon.tooltip',
+  'jquery.flot',
+  'jquery.flot.florizon',
+  'jquery.flot.events',
+  'jquery.flot.selection',
+  'jquery.flot.time',
+  'jquery.flot.crosshair'
 ],
 function (angular, $, kbn, moment, _, GraphTooltip) {
   'use strict';
@@ -46,10 +52,10 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
               height = parseInt(height.replace('px', ''), 10);
             }
             if ( scope.panel && scope.panel.targets && scope.panel.horizon ) {
-              var minHeight = scope.panel.targets.length * ( scope.panel.horizon.horizonHeight + scope.panel.horizon.marginBottom );
-              minHeight += scope.panel.horizon.axisHeight;
+              height = scope.panel.targets.length * ( scope.panel.horizon.horizonHeight + scope.panel.horizon.marginBottom );
+              height += scope.panel.horizon.axisHeight;
             }
-            elem.css('height', Math.min( minHeight ) + 'px');
+            elem.css('height', Math.min( height ) + 'px');
 
             return true;
           } catch(e) { // IE throws errors sometimes
@@ -128,7 +134,7 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             series.applySeriesOverrides(panel.seriesOverrides);
             series.data = series.getFlotPairs(panel.nullPointMode, panel.y_formats);
             // if hidden remove points and disable stack
-            if (scope.hiddenSeries[series.info.alias]) {
+            if (scope.hiddenSeries[series.alias]) {
               series.data = [];
               series.stack = false;
             }

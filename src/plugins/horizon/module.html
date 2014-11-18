@@ -11,10 +11,12 @@
 
       <div class="graph-canvas-wrapper">
 
-        <div ng-if="datapointsWarning" class="datapoints-warning" style="margin-top:80px;">
-          <span class="small" ng-show="!datapointsCount">No datapoints <tip>Can be caused by timezone mismatch between browser and graphite server</tip></span>
-          <span class="small" ng-show="datapointsOutside">Datapoints outside time range <tip>Can be caused by timezone mismatch between browser and graphite server</tip></span>
-        </div>
+		<div ng-if="datapointsWarning" class="datapoints-warning">
+			<span class="small" ng-show="!datapointsCount">
+				No datapoints <tip>No datapoints returned from metric query</tip>
+			</span>
+			<span class="small" ng-show="datapointsOutside">Datapoints outside time range <tip>Can be caused by timezone mismatch between browser and graphite server</tip></span>
+		</div>
 
         <div grafana-horizon class="histogram-chart">
         </div>
@@ -28,17 +30,17 @@
 		<div class="dashboard-editor-header">
 			<div class="dashboard-editor-title">
 				<i class="icon icon-bar-chart"></i>
-				Graph
+				Horizon
 			</div>
 
 			<div ng-model="editor.index" bs-tabs>
-				<div ng-repeat="tab in editorTabs" data-title="{{tab}}">
+				<div ng-repeat="tab in panelMeta.editorTabs" data-title="{{tab.title}}">
 				</div>
 			</div>
 		</div>
 
 		<div class="dashboard-editor-body">
-			<div ng-repeat="tab in panelMeta.fullEditorTabs" ng-if="editorTabs[editor.index] == tab.title">
+			<div ng-repeat="tab in panelMeta.editorTabs" ng-if="editor.index === $index">
 				<div ng-include src="tab.src"></div>
 			</div>
 		</div>
