@@ -45,10 +45,11 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             if (_.isString(height)) {
               height = parseInt(height.replace('px', ''), 10);
             }
-
-            height -= scope.panel.title ? 24 : 9; // subtract panel title bar
-
-            elem.css('height', height + 'px');
+            if ( scope.panel && scope.panel.targets && scope.panel.horizon ) {
+              var minHeight = scope.panel.targets.length * ( scope.panel.horizon.horizonHeight + scope.panel.horizon.marginBottom );
+              minHeight += scope.panel.horizon.axisHeight;
+            }
+            elem.css('height', Math.min( minHeight ) + 'px');
 
             return true;
           } catch(e) { // IE throws errors sometimes
@@ -145,24 +146,43 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
 
           function callPlot() {
             // console.log( options );
-            elem.css( 'height', ( sortedSeries.length * options.series.horizon.horizonHeight + options.series.horizon.axisHeight ) + 'px');
             try {
+              var $g;
               elem.html( '' );
               // console.log( sortedSeries );
               _.each(sortedSeries, function(serie, el) {
                 // console.log( serie );
                 if ( options.xaxis ) {
-                  options.xaxis.show = ( el === sortedSeries.length - 1 );
+                  options.xaxis.show = false;
                 }
-                var serieHeight = ( options.xaxis.show ) ? options.series.horizon.horizonHeight + options.series.horizon.axisHeight : options.series.horizon.horizonHeight;
-                var $g = $( '<div>' ).data( 'pos', el ).addClass( 'horizon-tooltip' );
-                $g.css({ 'height': serieHeight+'px', 'margin-bottom': options.series.horizon.marginBottom+'px' });
-                if ( !options.xaxis.show ) {
-                  $g.css({ 'margin-left': '14px', 'margin-right': '14px' });
-                }
+                $g = $( '<div>' ).data( 'pos', el ).addClass( 'horizon-tooltip' );
+                $g.css({ 'height': options.series.horizon.horizonHeight+'px', 'margin-bottom': options.series.horizon.marginBottom+'px' });
                 elem.append( $g );
                 $.plot($g, [serie], options);
               });
+              // xaxis
+              if ( sortedSeries.length ) {
+                options.xaxis.show = true;
+                $g = $( '<div>' );
+                $g.css({ 'height': options.series.horizon.axisHeight+'px', 'margin-bottom': options.series.horizon.marginBottom+'px' });
+                elem.append( $g );
+                $.plot($g, [], {
+                  xaxis: options.xaxis,
+                  series: {
+                    lines: { show: false },
+                    points: { show: false },
+                    bars: { show: false }
+                  },
+                  grid: {
+                    minBorderMargin: 0,
+                    markings: [],
+                    backgroundColor: null,
+                    borderWidth: 0,
+                    hoverable: false,
+                    color: 'white'
+                  }
+                });
+              }
             } catch (e) {
               console.log('flotcharts error', e);
             }
