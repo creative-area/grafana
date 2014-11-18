@@ -4,7 +4,15 @@ define([
   'kbn',
   'moment',
   'lodash',
-  './grafanaGraph.tooltip'
+  './graph.tooltip',
+  'jquery.flot',
+  'jquery.flot.events',
+  'jquery.flot.selection',
+  'jquery.flot.time',
+  'jquery.flot.stack',
+  'jquery.flot.stackpercent',
+  'jquery.flot.fillbelow',
+  'jquery.flot.crosshair'
 ],
 function (angular, $, kbn, moment, _, GraphTooltip) {
   'use strict';
@@ -46,10 +54,6 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
           scope.get_data();
         });
 
-        scope.$on('toggleLegend', function() {
-          render_panel();
-        });
-
         // Receive render events
         scope.$on('render',function(event, renderData) {
           data = renderData || data;
@@ -68,10 +72,11 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
               height = parseInt(height.replace('px', ''), 10);
             }
 
+            height -= 5; // padding
             height -= scope.panel.title ? 24 : 9; // subtract panel title bar
 
             if (scope.panel.legend.show && !scope.panel.legend.rightSide) {
-              height = height - 21; // subtract one line legend
+              height = height - 26; // subtract one line legend
             }
 
             elem.css('height', height + 'px');
@@ -110,7 +115,12 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             var series = data[i];
             var axis = yaxis[series.yaxis - 1];
             var formater = kbn.valueFormats[scope.panel.y_formats[series.yaxis - 1]];
-            series.updateLegendValues(formater, axis.tickDecimals, axis.scaledDecimals);
+
+            // legend and tooltip gets one more decimal precision
+            // than graph legend ticks
+            var tickDecimals = (axis.tickDecimals || -1) + 1;
+
+            series.updateLegendValues(formater, tickDecimals, axis.scaledDecimals + 2);
             if(!scope.$$phase) { scope.$digest(); }
           }
         }
@@ -179,7 +189,7 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             series.data = series.getFlotPairs(panel.nullPointMode, panel.y_formats);
 
             // if hidden remove points and disable stack
-            if (scope.hiddenSeries[series.info.alias]) {
+            if (scope.hiddenSeries[series.alias]) {
               series.data = [];
               series.stack = false;
             }
