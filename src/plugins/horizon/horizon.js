@@ -115,7 +115,7 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             grid: {
               minBorderMargin: 0,
               markings: [],
-              backgroundColor: 'white',
+              backgroundColor: '#d1d1d1',
               borderWidth: 0,
               hoverable: true,
               color: 'white'
@@ -129,6 +129,11 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             }
           };
 
+          function decimalRound( value, divider ) {
+            divider = divider || 100;
+            return Math.round( value * divider ) / divider;
+          }
+
           for (var i = 0; i < data.length; i++) {
             var series = data[i];
             series.applySeriesOverrides(panel.seriesOverrides);
@@ -137,6 +142,13 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
             if (scope.hiddenSeries[series.alias]) {
               series.data = [];
               series.stack = false;
+            } else {
+              scope.legend[ i ].stats = {
+                current: decimalRound( scope.seriesList[ i ].stats.current ),
+                min: decimalRound( scope.seriesList[ i ].stats.min ),
+                max: decimalRound( scope.seriesList[ i ].stats.max ),
+                avg: decimalRound( scope.seriesList[ i ].stats.avg )
+              };
             }
           }
 
