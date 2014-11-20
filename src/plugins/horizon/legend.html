@@ -3,7 +3,7 @@
   <div ng-repeat='series in legend'
        ng-class="{'graph-legend-series-hidden': hiddenSeries[series.alias]}"
        ng-style="{'right': ((panel.legend.rightSide) ? '20px' : 'none') }"
-       style="position: absolute; top: {{series.index*(series.horizon.horizonHeight+series.horizon.marginBottom)}}px;color:{{series.horizon.labelColor}};">
+       style="position: absolute; top: {{series.index*(series.horizon.horizonHeight+series.horizon.marginBottom)}}px;color:{{panel.horizon.labelColor}};">
     <div class="graph-legend-alias small">
       {{series.alias}}
     </div>
