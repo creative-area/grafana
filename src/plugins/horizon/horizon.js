@@ -118,7 +118,7 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
               backgroundColor: '#d1d1d1',
               borderWidth: 0,
               hoverable: true,
-              color: 'white'
+              color: '#d1d1d1'
             },
             selection: {
               mode: "x",
@@ -155,8 +155,8 @@ function (angular, $, kbn, moment, _, GraphTooltip) {
           addTimeAxis(options);
           addAnnotations(options);
           configureAxisOptions(data, options);
-          // TODO:
-          // configureHorizonOptions(options);
+          options.grid.backgroundColor = panel.horizon.backgroundColor;
+          options.grid.color = panel.horizon.backgroundColor;
 
           var sortedSeries = _.sortBy(data, function(series) { return series.zindex; });
 

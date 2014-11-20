@@ -9,6 +9,10 @@ function ($) {
 
     var $tooltip = $('<div id="tooltip">');
 
+    this.decimalRound = function( value, divider ) {
+      divider = divider || 100;
+      return Math.round( value * divider ) / divider;
+    }
     this.findHoverIndexFromDataPoints = function(posX, series,last) {
       var ps = series.datapoints.pointsize;
       var initial = last*ps;
@@ -106,7 +110,7 @@ function ($) {
       if ( series ) {
         hoverInfo = seriesHoverInfo[0];
         value = Math.round(hoverInfo.value*100)/100;
-        self.showTooltip(timestamp, series.label + ': <strong>' + hoverInfo.value + '</strong>', pos);
+        self.showTooltip(timestamp, series.label + ': <strong>' + self.decimalRound(hoverInfo.value) + '</strong>', pos);
       }
     });
   }

@@ -35,7 +35,7 @@ function (angular, app, $, _, kbn, moment, TimeSeries, PanelMeta) {
       metricsEditor: true
     });
 
-    $scope.panelMeta.addEditorTab('Legend Editor', 'plugins/horizon/legendEditor.html');
+    $scope.panelMeta.addEditorTab('Configuration', 'plugins/horizon/configEditor.html');
 
     // $scope.panelMeta.addExtendedMenuItem('Export CSV', '', 'exportCsv()');
     // $scope.panelMeta.addExtendedMenuItem('Toggle legend', '', 'toggleLegend()');
@@ -97,7 +97,9 @@ function (angular, app, $, _, kbn, moment, TimeSeries, PanelMeta) {
         bands: 6,
         horizonHeight: 32,
         axisHeight: 25,
-        marginBottom: 2
+        marginBottom: 2,
+        backgroundColor: '#d1d1d1',
+        labelColor: '#000000'
       },
 
       targets: [{}],
