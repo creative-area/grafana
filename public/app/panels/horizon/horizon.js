@@ -74,29 +74,18 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
         // NOTE: rewrited
         function setElementHeight() {
           try {
-            // CODE FROM GRAPH
-            // graphHeight = scope.height || scope.panel.height || scope.row.height;
-            // if (_.isString(graphHeight)) {
-            //   graphHeight = parseInt(graphHeight.replace('px', ''), 10);
-            // }
-            //
-            // graphHeight -= 5; // padding
-            // graphHeight -= scope.panel.title ? 24 : 9; // subtract panel title bar
-            //
-            // graphHeight = graphHeight - getLegendHeight(graphHeight); // subtract one line legend
-            //
-            // elem.css('height', graphHeight + 'px');
-
-            var graphHeight = scope.height || scope.panel.height || scope.row.height;
+            graphHeight = scope.height || scope.panel.height || scope.row.height;
             if (_.isString(graphHeight)) {
               graphHeight = parseInt(graphHeight.replace('px', ''), 10);
             }
-            if (scope.panel && scope.panel.targets && scope.panel.horizon) {
-              graphHeight = scope.panel.targets.length * (scope.panel.horizon.horizonHeight + scope.panel.horizon.marginBottom);
-              graphHeight += scope.panel.horizon.axisHeight;
+            if (data) {
+              var seriesHeight = data.length * (scope.panel.horizon.horizonHeight + scope.panel.horizon.marginBottom);
+              if (seriesHeight > graphHeight) {
+                graphHeight = seriesHeight;
+              }
             }
+            graphHeight += scope.panel.horizon.axisHeight;
             elem.css('height', Math.min(graphHeight) + 'px');
-
             return true;
           } catch(e) { // IE throws errors sometimes
             return false;
