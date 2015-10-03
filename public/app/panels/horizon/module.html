@@ -1,6 +1,13 @@
 <grafana-panel>
 
 	<div class="graph-wrapper" ng-class="{'graph-legend-rightside': panel.legend.rightSide}">
+
+    <div class="horizon-legend-wrapper"
+      ng-if="panel.legend.show"
+      ng-style="{'top': (panel.horizon.horizonHeight-17)+'px' }"
+      style="position: relative; z-index: 10;"
+      horizon-legend></div>
+
 		<div class="graph-canvas-wrapper">
 
 			<!-- <span class="graph&#45;time&#45;info" ng&#45;if="panelMeta.timeInfo"> -->
@@ -9,7 +16,7 @@
 
 			<div ng-if="datapointsWarning" class="datapoints-warning">
 				<span class="small" ng-show="!datapointsCount">
-					No datapoints <tip>No datapoints returned from metric query</tip>
+					No datapoints at all <tip>No datapoints returned from metric query</tip>
 				</span>
 				<span class="small" ng-show="datapointsOutside">Datapoints outside time range <tip>Can be caused by timezone mismatch between browser and graphite server</tip></span>
 			</div>
@@ -18,6 +25,7 @@
 			</div>
 
 		</div>
+
 	</div>
 
 	<div class="clearfix"></div>

@@ -66,8 +66,8 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
             return;
           }
           annotations = data.annotations || annotations;
-          console.log('on render');
-          console.log(data);
+          // console.log('on render');
+          // console.log(data);
           render_panel();
         });
 
@@ -139,8 +139,8 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
         // }
 
         function drawHook(plot) {
-          console.log("drawHook");
-          console.log(plot);
+          // console.log("drawHook");
+          // console.log(plot);
           // Update legend values
           var yaxis = plot.getYAxes();
           for (var i = 0; i < data.length; i++) {
@@ -188,13 +188,13 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
 
         // Function for rendering panel
         function render_panel() {
-          console.log('render_panel');
+          // console.log('render_panel');
           if (shouldAbortRender()) {
             return;
           }
 
           var panel = scope.panel;
-          console.log(panel);
+          // console.log(panel);
 
           // Populate element
           var options = {
@@ -203,7 +203,7 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
               processOffset: [processOffsetHook],
             },
             // hooks: { draw: [updateLegendValues] },
-            legend: { show: false },
+            legend: { show: true },
             series: {
               horizon: panel.horizon
             },
@@ -266,11 +266,11 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
           //   }
           // }
 
-          console.log(data);
+          // console.log(data);
 
           addTimeAxis(options);
           addAnnotations(options);
-          // configureAxisOptions(data, options);
+          configureAxisOptions(data, options);
 
           options.grid.backgroundColor = panel.horizon.backgroundColor;
           options.grid.color = panel.horizon.backgroundColor;
@@ -280,16 +280,17 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
           elem.data(options.series.horizon);
 
           function callPlot(incrementRenderCounter) {
-            console.log('callPlot');
-            console.log(sortedSeries);
+            // console.log('callPlot');
+            // console.log(sortedSeries);
+            // "original"
             // try {
             //   $.plot(elem, sortedSeries, options);
             // } catch (e) {
             //   console.log('flotcharts error', e);
             // }
 
-            console.log(options);
-            console.log(elem);
+            // console.log(options);
+            // console.log(elem);
             try {
               var $g;
               elem.html('');
@@ -364,8 +365,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
 
         // NOTE: rewrited (xaxis show = false)
         function addTimeAxis(options) {
-          console.log("addTimeAxis");
-          console.log(scope.panel);
           var ticks = elem.width() / 100;
           var min = _.isUndefined(scope.range.from) ? null : scope.range.from.valueOf();
           var max = _.isUndefined(scope.range.to) ? null : scope.range.to.valueOf();
@@ -420,6 +419,8 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
 
         // NOTE: rewrited (without pourcentage and stack)
         function configureAxisOptions(data, options) {
+          // console.log('configureAxisOptions');
+          // console.log(options);
           var defaults = {
             position: 'left',
             show: scope.panel['y-axis'],
@@ -430,22 +431,22 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
           };
 
           options.yaxes.push(defaults);
-
-          if (_.findWhere(data, {yaxis: 2})) {
-            // TODO: check if needed (only 1 axis)
-            var secondY = _.clone(defaults);
-            secondY.index = 2,
-            secondY.logBase = scope.panel.grid.rightLogBase || 1,
-            secondY.position = 'right';
-            secondY.min = scope.panel.grid.rightMin;
-            secondY.max = scope.panel.grid.rightMax;
-            options.yaxes.push(secondY);
-
-            applyLogScale(options.yaxes[1], data);
-            configureAxisMode(options.yaxes[1], scope.panel.y_formats[1]);
-          }
-
-          applyLogScale(options.yaxes[0], data);
+          //
+          // if (_.findWhere(data, {yaxis: 2})) {
+          //   // TODO: check if needed (only 1 axis)
+          //   var secondY = _.clone(defaults);
+          //   secondY.index = 2,
+          //   secondY.logBase = scope.panel.grid.rightLogBase || 1,
+          //   secondY.position = 'right';
+          //   secondY.min = scope.panel.grid.rightMin;
+          //   secondY.max = scope.panel.grid.rightMax;
+          //   options.yaxes.push(secondY);
+          //
+          //   applyLogScale(options.yaxes[1], data);
+          //   configureAxisMode(options.yaxes[1], scope.panel.y_formats[1]);
+          // }
+          //
+          // applyLogScale(options.yaxes[0], data);
           configureAxisMode(options.yaxes[0], scope.panel.y_formats[0]);
         }
 

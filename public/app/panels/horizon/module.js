@@ -8,6 +8,7 @@ define([
   'app/components/timeSeries',
   'app/components/panelmeta',
   './horizon',
+  './legend',
 ],
 function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
   'use strict';
@@ -45,9 +46,9 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
       // sets client side (flot) or native graphite png renderer (png)
       renderer: 'flot',
       // Show/hide the x-axis
-      // 'x-axis'      : true,
+      'x-axis'      : true,
       // Show/hide y-axis
-      // 'y-axis'      : true,
+      'y-axis'      : false,
       // y axis formats, [left axis,right axis]
       y_formats    : ['short', 'short'],// axis 1 not used
       // grid options
