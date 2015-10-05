@@ -31,6 +31,12 @@ function ($) {
       return j - 1;
     };
 
+    this.findSerieIndexFromPos = function(pos, nbSeries) {
+      var offset = elem.offset();
+      var elemData = elem.data();
+      return Math.min(nbSeries-1, Math.floor((pos.pageY - offset.top) / (elemData.horizonHeight+elemData.marginBottom)));
+    };
+
     this.showTooltip = function(title, innerHtml, pos) {
       var body = '<div class="graph-tooltip small"><div class="graph-tooltip-time">'+ title + '</div> ' ;
       body += innerHtml + '</div>';
@@ -84,13 +90,16 @@ function ($) {
     };
 
     elem.mouseleave(function () {
-      if (scope.panel.tooltip.shared) {
-        var plot = elem.data().plot;
+      var $horizonLines = elem.find(".horizon-tooltip");
+      $horizonLines.each(function(i, horizonLine) {
+        var dataHorizonLine = $(horizonLine).data();
+        var plot = dataHorizonLine.plot;
         if (plot) {
           $tooltip.detach();
           plot.unhighlight();
+          plot.clearCrosshair();
         }
-      }
+      });
 
       if (dashboard.sharedCrosshair) {
         scope.appEvent('clearCrosshair');
@@ -98,10 +107,9 @@ function ($) {
     });
 
     elem.bind("plothover", function (event, pos, item) {
-      var plot = elem.data().plot;
-      var plotData = plot.getData();
       var seriesList = getSeriesFn();
-      var group, value, timestamp, hoverInfo, i, series, seriesHtml;
+      var plot;
+      var value, timestamp, series;
 
       if(dashboard.sharedCrosshair){
         scope.appEvent('setCrosshair', { pos: pos, scope: scope });
@@ -111,54 +119,61 @@ function ($) {
         return;
       }
 
-      if (scope.panel.tooltip.shared) {
-        plot.unhighlight();
+      var $horizonLineHover = $(event.target);
+      plot = $horizonLineHover.data('plot');
+      plot.unhighlight();
 
-        var seriesHoverInfo = self.getMultiSeriesPlotHoverInfo(plotData, pos);
-
-        seriesHtml = '';
-        timestamp = dashboard.formatDate(seriesHoverInfo.time);
-
-        for (i = 0; i < seriesHoverInfo.length; i++) {
-          hoverInfo = seriesHoverInfo[i];
-
-          if (hoverInfo.hidden) {
-            continue;
+      var serieIndex = self.findSerieIndexFromPos(pos, seriesList.length);
+      var $horizonLines = elem.find(".horizon-tooltip");
+      $horizonLines.each(function(i, horizonLine) {
+        var dataHorizonLine = $(horizonLine).data();
+        if (dataHorizonLine.pos !== serieIndex) {
+          plot = dataHorizonLine.plot;
+          if (plot) {
+            plot.setCrosshair({ x: pos.x, y: pos.y });
           }
-
-          series = seriesList[i];
-          value = series.formatValue(hoverInfo.value);
-
-          seriesHtml += '<div class="graph-tooltip-list-item"><div class="graph-tooltip-series-name">';
-          seriesHtml += '<i class="fa fa-minus" style="color:' + series.color +';"></i> ' + series.label + ':</div>';
-          seriesHtml += '<div class="graph-tooltip-value">' + value + '</div></div>';
-          plot.highlight(i, hoverInfo.hoverIndex);
         }
-
+      });
+      if (scope.panel.tooltip.shared) {
+        var seriesHtml = '';
+        var nbSeries = seriesList.length;
+        timestamp = null;
+        for (var i = 0 ; i < nbSeries ; i++) {
+          series = seriesList[i];
+          var hoverIndex = self.findHoverIndexFromData(pos.x, series);
+          if (series) {
+            value = series.formatValue(series.data[hoverIndex][1]);
+            timestamp = timestamp || dashboard.formatDate(series.data[hoverIndex][0]);
+            seriesHtml += '<div class="graph-tooltip-list-item"><div class="graph-tooltip-series-name">';
+            seriesHtml += '<i class="fa fa-minus"></i> ';
+            seriesHtml += (serieIndex === i ? '<strong>' : '');
+            seriesHtml += series.label;
+            seriesHtml += (serieIndex === i ? '</strong>' : '');
+            seriesHtml += ':</div>';
+            seriesHtml += '<div class="graph-tooltip-value">' + value + '</div></div>';
+          }
+        }
         self.showTooltip(timestamp, seriesHtml, pos);
       }
       // single series tooltip
       else if (item) {
-        series = seriesList[item.seriesIndex];
-        group = '<div class="graph-tooltip-list-item"><div class="graph-tooltip-series-name">';
-        group += '<i class="fa fa-minus" style="color:' + item.series.color +';"></i> ' + series.label + ':</div>';
-
-        if (scope.panel.stack && scope.panel.tooltip.value_type === 'individual') {
-          value = item.datapoint[1] - item.datapoint[2];
+        var plotData = plot.getData();
+        var seriesHoverInfo = self.getMultiSeriesPlotHoverInfo(plotData, pos);
+        if (seriesHoverInfo.pointCountMismatch) {
+          self.showTooltip('Shared tooltip error', '<ul>' +
+            '<li>Series point counts are not the same</li>' +
+            '<li>Set null point mode to null or null as zero</li>' +
+            '<li>For influxdb users set fill(0) in your query</li></ul>', pos);
+          return;
         }
-        else {
-          value = item.datapoint[1];
+
+        timestamp = dashboard.formatDate(seriesHoverInfo.time);
+        series = seriesList[serieIndex];
+        if (series) {
+          var hoverInfo = seriesHoverInfo[0];
+          value = series.formatValue(hoverInfo.value);
+          self.showTooltip(timestamp, series.label + ': <strong>' + value + '</strong>', pos);
         }
-
-        value = series.formatValue(value);
-        timestamp = dashboard.formatDate(item.datapoint[0]);
-        group += '<div class="graph-tooltip-value">' + value + '</div>';
-
-        self.showTooltip(timestamp, group, pos);
-      }
-      // no hit
-      else {
-        $tooltip.detach();
       }
     });
   }

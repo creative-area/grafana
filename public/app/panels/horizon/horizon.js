@@ -12,7 +12,7 @@ define([
   'kbn',
   'moment',
   'lodash',
-  // './horizon.tooltip',
+  './horizon.tooltip',
   'jquery.flot',
   'jquery.flot.florizon',
   'jquery.flot.selection',
@@ -20,7 +20,7 @@ define([
   'jquery.flot.time',
   'jquery.flot.crosshair'
 ],
-function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
+function (angular, $, kbn, moment, _, HorizonTooltip) {
   'use strict';
 
   var module = angular.module('grafana.directives');
@@ -44,18 +44,24 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
           }
 
           if(dashboard.sharedCrosshair) {
-            var plot = elem.data().plot;
-            if (plot) {
-              plot.setCrosshair({ x: info.pos.x, y: info.pos.y });
-            }
+            var $horizonLines = elem.find(".horizon-tooltip");
+            $horizonLines.each(function(i, horizonLine) {
+              var plot = $(horizonLine).data().plot;
+              if (plot) {
+                plot.setCrosshair({ x: info.pos.x, y: info.pos.y });
+              }
+            });
           }
         });
 
         scope.onAppEvent('clearCrosshair', function() {
-          var plot = elem.data().plot;
-          if (plot) {
-            plot.clearCrosshair();
-          }
+          var $horizonLines = elem.find(".horizon-tooltip");
+          $horizonLines.each(function(i, horizonLine) {
+            var plot = $(horizonLine).data().plot;
+            if (plot) {
+              plot.clearCrosshair();
+            }
+          });
         });
 
         // Receive render events
@@ -66,8 +72,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
             return;
           }
           annotations = data.annotations || annotations;
-          // console.log('on render');
-          // console.log(data);
           render_panel();
         });
 
@@ -128,8 +132,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
         // }
 
         function drawHook(plot) {
-          // console.log("drawHook");
-          // console.log(plot);
           // Update legend values
           var yaxis = plot.getYAxes();
           for (var i = 0; i < data.length; i++) {
@@ -177,13 +179,11 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
 
         // Function for rendering panel
         function render_panel() {
-          // console.log('render_panel');
           if (shouldAbortRender()) {
             return;
           }
 
           var panel = scope.panel;
-          // console.log(panel);
 
           // Populate element
           var options = {
@@ -220,11 +220,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
             }
           };
 
-          // function decimalRound(value, divider) {
-          //   divider = divider || 100;
-          //   return Math.round(value * divider) / divider;
-          // }
-
           for (var i = 0; i < data.length; i++) {
             var series = data[i];
             series.applySeriesOverrides(panel.seriesOverrides);
@@ -236,26 +231,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
               series.stack = false;
             }
           }
-
-          // for (var i = 0; i < data.length; i++) {
-          //   var series = data[i];
-          //   series.applySeriesOverrides(panel.seriesOverrides);
-          //   series.data = series.getFlotPairs(panel.nullPointMode, panel.y_formats);
-          //   // if hidden remove points and disable stack
-          //   if (scope.hiddenSeries[series.alias]) {
-          //     series.data = [];
-          //     series.stack = false;
-          //   } else {
-          //     scope.legend[ i ].stats = {
-          //       current: decimalRound(scope.seriesList[ i ].stats.current),
-          //       min: decimalRound(scope.seriesList[ i ].stats.min),
-          //       max: decimalRound(scope.seriesList[ i ].stats.max),
-          //       avg: decimalRound(scope.seriesList[ i ].stats.avg)
-          //     };
-          //   }
-          // }
-
-          // console.log(data);
 
           addTimeAxis(options);
           addAnnotations(options);
@@ -269,23 +244,10 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
           elem.data(options.series.horizon);
 
           function callPlot(incrementRenderCounter) {
-            // console.log('callPlot');
-            // console.log(sortedSeries);
-            // "original"
-            // try {
-            //   $.plot(elem, sortedSeries, options);
-            // } catch (e) {
-            //   console.log('flotcharts error', e);
-            // }
-
-            // console.log(options);
-            // console.log(elem);
             try {
               var $g;
               elem.html('');
-              // console.log( sortedSeries );
               _.each(sortedSeries, function(serie, el) {
-                // console.log( serie );
                 if (options.xaxis) {
                   options.xaxis.show = false;
                 }
@@ -408,8 +370,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
 
         // NOTE: rewrited (without pourcentage and stack)
         function configureAxisOptions(data, options) {
-          // console.log('configureAxisOptions');
-          // console.log(options);
           var defaults = {
             position: 'left',
             show: scope.panel['y-axis'],
@@ -420,7 +380,6 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
           };
 
           options.yaxes.push(defaults);
-          //
           // if (_.findWhere(data, {yaxis: 2})) {
           //   // TODO: check if needed (only 1 axis)
           //   var secondY = _.clone(defaults);
@@ -514,9 +473,9 @@ function (angular, $, kbn, moment, _/*, GraphTooltip*/) {
         }
 
         // TODO: need to be implemented
-        // new GraphTooltip(elem, dashboard, scope, function() {
-        //   return data;
-        // });
+        new HorizonTooltip(elem, dashboard, scope, function() {
+          return sortedSeries;
+        });
 
         // NOTE: rewrited
         elem.bind("plotselected", function (event, ranges) {

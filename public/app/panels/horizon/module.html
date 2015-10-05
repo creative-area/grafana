@@ -3,16 +3,11 @@
 	<div class="graph-wrapper">
 
     <div class="horizon-legend-wrapper"
-      ng-if="panel.legend.show"
       ng-style="{'top': (panel.horizon.horizonHeight-17)+'px' }"
       style="position: relative; z-index: 10;"
       horizon-legend></div>
 
 		<div class="graph-canvas-wrapper">
-
-			<!-- <span class="graph&#45;time&#45;info" ng&#45;if="panelMeta.timeInfo"> -->
-			<!-- 	<i class="fa fa&#45;clock&#45;o"></i> {{panelMeta.timeInfo}} -->
-		  <!-- </span> -->
 
 			<div ng-if="datapointsWarning" class="datapoints-warning">
 				<span class="small" ng-show="!datapointsCount">

@@ -33,8 +33,6 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
     });
 
     $scope.panelMeta.addEditorTab('Configuration', 'app/panels/horizon/configEditor.html');
-    // $scope.panelMeta.addEditorTab('Axes & Grid', 'app/panels/graph/axisEditor.html');
-    // $scope.panelMeta.addEditorTab('Display Styles', 'app/panels/graph/styleEditor.html');
     $scope.panelMeta.addEditorTab('Time range', 'app/features/panel/partials/panelTime.html');
 
     $scope.panelMeta.addExtendedMenuItem('Export CSV', '', 'exportCsv()');
@@ -64,22 +62,6 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
         threshold1Color: 'rgba(216, 200, 27, 0.27)',
         threshold2Color: 'rgba(234, 112, 112, 0.22)'
       },
-      // show/hide lines
-      // lines         : true,
-      // fill factor
-      // fill          : 1,
-      // line width in pixels
-      // linewidth     : 2,
-      // show hide points
-      // points        : false,
-      // point radius in pixels
-      // pointradius   : 5,
-      // show hide bars
-      // bars          : false,
-      // enable/disable stacking
-      // stack         : false,
-      // stack percentage mode
-      // percentage    : false,
       // legend options
       legend: {
         show: true, // disable/enable legend
@@ -87,7 +69,7 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
         min: false,
         max: false,
         current: false,
-        // total: false,
+        total: false,
         avg: false
       },
       // horizon
@@ -101,8 +83,6 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
       },
       // how null points should be handled
       nullPointMode : 'connected',
-      // staircase line mode
-      // steppedLine: false,
       // tooltip options
       tooltip       : {
         value_type: 'cumulative',
@@ -113,8 +93,6 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
       timeShift: null,
       // metric queries
       targets: [{}],
-      // series color overrides
-      // aliasColors: {},
       // other style overrides
       seriesOverrides: [],
     };
@@ -185,13 +163,9 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
     $scope.seriesHandler = function(seriesData, index) {
       var datapoints = seriesData.datapoints;
       var alias = seriesData.target;
-      // var colorIndex = index % $rootScope.colors.length;
-      // var color = $scope.panel.aliasColors[alias] || $rootScope.colors[colorIndex];
-
       var series = new TimeSeries({
         datapoints: datapoints,
         alias: alias,
-        // color: color,
         index: index,
       });
 
@@ -212,65 +186,6 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
       panelHelper.broadcastRender($scope, data);
     };
 
-    // $scope.changeSeriesColor = function(series, color) {
-    //   series.color = color;
-    //   $scope.panel.aliasColors[series.alias] = series.color;
-    //   $scope.render();
-    // };
-
-    // $scope.toggleSeries = function(serie, event) {
-    //   if (event.ctrlKey || event.metaKey || event.shiftKey) {
-    //     if ($scope.hiddenSeries[serie.alias]) {
-    //       delete $scope.hiddenSeries[serie.alias];
-    //     }
-    //     else {
-    //       $scope.hiddenSeries[serie.alias] = true;
-    //     }
-    //   } else {
-    //     $scope.toggleSeriesExclusiveMode(serie);
-    //   }
-    //   $scope.render();
-    // };
-
-    // $scope.toggleSeriesExclusiveMode = function(serie) {
-    //   var hidden = $scope.hiddenSeries;
-    //   if (hidden[serie.alias]) {
-    //     delete hidden[serie.alias];
-    //   }
-    //   // check if every other series is hidden
-    //   var alreadyExclusive = _.every($scope.seriesList, function(value) {
-    //     if (value.alias === serie.alias) {
-    //       return true;
-    //     }
-    //     return hidden[value.alias];
-    //   });
-    //   if (alreadyExclusive) {
-    //     // remove all hidden series
-    //     _.each($scope.seriesList, function(value) {
-    //       delete $scope.hiddenSeries[value.alias];
-    //     });
-    //   }
-    //   else {
-    //     // hide all but this serie
-    //     _.each($scope.seriesList, function(value) {
-    //       if (value.alias === serie.alias) {
-    //         return;
-    //       }
-    //       $scope.hiddenSeries[value.alias] = true;
-    //     });
-    //   }
-    // };
-
-    // $scope.toggleYAxis = function(info) {
-    //   var override = _.findWhere($scope.panel.seriesOverrides, { alias: info.alias });
-    //   if (!override) {
-    //     override = { alias: info.alias };
-    //     $scope.panel.seriesOverrides.push(override);
-    //   }
-    //   override.yaxis = info.yaxis === 2 ? 1 : 2;
-    //   $scope.render();
-    // };
-
     $scope.addSeriesOverride = function(override) {
       $scope.panel.seriesOverrides.push(override || {});
     };
@@ -279,12 +194,6 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
       $scope.panel.seriesOverrides = _.without($scope.panel.seriesOverrides, override);
       $scope.render();
     };
-
-    // Called from panel menu
-    // $scope.toggleLegend = function() {
-    //   $scope.panel.legend.show = !$scope.panel.legend.show;
-    //   $scope.get_data();
-    // };
 
     $scope.legendValuesOptionChanged = function() {
       var legend = $scope.panel.legend;
