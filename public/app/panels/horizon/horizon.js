@@ -399,48 +399,48 @@ function (angular, $, kbn, moment, _, HorizonTooltip) {
         }
 
         // NOTE: ok idem (OPTIONS EDITOR need to be implemented)
-        function applyLogScale(axis, data) {
-          if (axis.logBase === 1) {
-            return;
-          }
-
-          var series, i;
-          var max = axis.max;
-
-          if (max === null) {
-            for (i = 0; i < data.length; i++) {
-              series = data[i];
-              if (series.yaxis === axis.index) {
-                if (max < series.stats.max) {
-                  max = series.stats.max;
-                }
-              }
-            }
-            if (max === void 0) {
-              max = Number.MAX_VALUE;
-            }
-          }
-
-          axis.min = axis.min !== null ? axis.min : 0;
-          axis.ticks = [0, 1];
-          var nextTick = 1;
-
-          while (true) {
-            nextTick = nextTick * axis.logBase;
-            axis.ticks.push(nextTick);
-            if (nextTick > max) {
-              break;
-            }
-          }
-
-          if (axis.logBase === 10) {
-            axis.transform = function(v) { return Math.log(v+0.1); };
-            axis.inverseTransform  = function (v) { return Math.pow(10,v); };
-          } else {
-            axis.transform = function(v) { return Math.log(v+0.1) / Math.log(axis.logBase); };
-            axis.inverseTransform  = function (v) { return Math.pow(axis.logBase,v); };
-          }
-        }
+        // function applyLogScale(axis, data) {
+        //   if (axis.logBase === 1) {
+        //     return;
+        //   }
+        //
+        //   var series, i;
+        //   var max = axis.max;
+        //
+        //   if (max === null) {
+        //     for (i = 0; i < data.length; i++) {
+        //       series = data[i];
+        //       if (series.yaxis === axis.index) {
+        //         if (max < series.stats.max) {
+        //           max = series.stats.max;
+        //         }
+        //       }
+        //     }
+        //     if (max === void 0) {
+        //       max = Number.MAX_VALUE;
+        //     }
+        //   }
+        //
+        //   axis.min = axis.min !== null ? axis.min : 0;
+        //   axis.ticks = [0, 1];
+        //   var nextTick = 1;
+        //
+        //   while (true) {
+        //     nextTick = nextTick * axis.logBase;
+        //     axis.ticks.push(nextTick);
+        //     if (nextTick > max) {
+        //       break;
+        //     }
+        //   }
+        //
+        //   if (axis.logBase === 10) {
+        //     axis.transform = function(v) { return Math.log(v+0.1); };
+        //     axis.inverseTransform  = function (v) { return Math.pow(10,v); };
+        //   } else {
+        //     axis.transform = function(v) { return Math.log(v+0.1) / Math.log(axis.logBase); };
+        //     axis.inverseTransform  = function (v) { return Math.pow(axis.logBase,v); };
+        //   }
+        // }
 
         // NOTE: ok idem
         function configureAxisMode(axis, format) {
