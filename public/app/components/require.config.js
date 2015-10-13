@@ -40,6 +40,7 @@ require.config({
     'jquery.flot.time':        'vendor/flot/jquery.flot.time',
     'jquery.flot.crosshair':   'vendor/flot/jquery.flot.crosshair',
     'jquery.flot.fillbelow':   'vendor/flot/jquery.flot.fillbelow',
+    'jquery.flot.florizon':    'app/panels/horizon/florizon',
 
     modernizr:                 'vendor/modernizr-2.6.1',
 
@@ -88,6 +89,7 @@ require.config({
     'jquery.flot.time':     ['jquery', 'jquery.flot'],
     'jquery.flot.crosshair':['jquery', 'jquery.flot'],
     'jquery.flot.fillbelow':['jquery', 'jquery.flot'],
+    'jquery.flot.florizon' :['jquery', 'jquery.flot'],
     'angular-dragdrop':     ['jquery', 'angular'],
     'angular-mocks':        ['angular'],
     'angular-sanitize':     ['angular'],

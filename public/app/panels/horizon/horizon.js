@@ -1,11 +1,3 @@
-require.config({
-  paths: {
-    'jquery.flot.florizon': 'app/panels/horizon/florizon'
-  },
-  shim: {
-    'jquery.flot.florizon': ['jquery', 'jquery.flot']
-  }
-});
 define([
   'angular',
   'jquery',
