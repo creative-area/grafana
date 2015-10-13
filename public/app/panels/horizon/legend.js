@@ -26,7 +26,7 @@ function (angular, _, kbn, $) {
         scope.$on('render', function() {
           data = scope.seriesList;
           if (data) {
-            render();
+            setTimeout(function() { render(); }, 50);
           }
         });
 
