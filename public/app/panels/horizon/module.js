@@ -7,14 +7,14 @@ define([
   'moment',
   'app/components/timeSeries',
   'app/components/panelmeta',
+  './seriesOverridesCtrl',
   './horizon',
   './legend',
 ],
 function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
   'use strict';
 
-  var module = angular.module('grafana.panels.horizon', []);
-  app.useModule(module);
+  var module = angular.module('grafana.panels.horizon');
 
   module.directive('grafanaPanelHorizon', function() {
     return {

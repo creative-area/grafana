@@ -9,7 +9,7 @@ define([
 function (angular, _, kbn, $) {
   'use strict';
 
-  var module = angular.module('grafana.panels.graph');
+  var module = angular.module('grafana.panels.horizon');
 
   module.directive('horizonLegend', function() {
     return {
