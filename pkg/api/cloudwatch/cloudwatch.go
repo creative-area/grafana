@@ -7,9 +7,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/grafana/grafana/pkg/middleware"
+	m "github.com/grafana/grafana/pkg/models"
 )
 
 type actionHandler func(*cwRequest, *middleware.Context)
@@ -17,9 +20,10 @@ type actionHandler func(*cwRequest, *middleware.Context)
 var actionHandlers map[string]actionHandler
 
 type cwRequest struct {
-	Region string `json:"region"`
-	Action string `json:"action"`
-	Body   []byte `json:"-"`
+	Region     string `json:"region"`
+	Action     string `json:"action"`
+	Body       []byte `json:"-"`
+	DataSource *m.DataSource
 }
 
 func init() {
@@ -35,7 +39,16 @@ func init() {
 }
 
 func handleGetMetricStatistics(req *cwRequest, c *middleware.Context) {
-	svc := cloudwatch.New(&aws.Config{Region: aws.String(req.Region)})
+	creds := credentials.NewChainCredentials(
+		[]credentials.Provider{
+			&credentials.EnvProvider{},
+			&credentials.SharedCredentialsProvider{Filename: "", Profile: req.DataSource.Database},
+			&ec2rolecreds.EC2RoleProvider{ExpiryWindow: 5 * time.Minute},
+		})
+	svc := cloudwatch.New(&aws.Config{
+		Region:      aws.String(req.Region),
+		Credentials: creds,
+	})
 
 	reqParam := &struct {
 		Parameters struct {
@@ -70,7 +83,17 @@ func handleGetMetricStatistics(req *cwRequest, c *middleware.Context) {
 }
 
 func handleListMetrics(req *cwRequest, c *middleware.Context) {
-	svc := cloudwatch.New(&aws.Config{Region: aws.String(req.Region)})
+	creds := credentials.NewChainCredentials(
+		[]credentials.Provider{
+			&credentials.EnvProvider{},
+			&credentials.SharedCredentialsProvider{Filename: "", Profile: req.DataSource.Database},
+			&ec2rolecreds.EC2RoleProvider{ExpiryWindow: 5 * time.Minute},
+		})
+	svc := cloudwatch.New(&aws.Config{
+		Region:      aws.String(req.Region),
+		Credentials: creds,
+	})
+
 	reqParam := &struct {
 		Parameters struct {
 			Namespace  string                        `json:"namespace"`
@@ -78,7 +101,6 @@ func handleListMetrics(req *cwRequest, c *middleware.Context) {
 			Dimensions []*cloudwatch.DimensionFilter `json:"dimensions"`
 		} `json:"parameters"`
 	}{}
-
 	json.Unmarshal(req.Body, reqParam)
 
 	params := &cloudwatch.ListMetricsInput{
@@ -112,7 +134,7 @@ func handleDescribeInstances(req *cwRequest, c *middleware.Context) {
 		params.Filters = reqParam.Parameters.Filters
 	}
 	if len(reqParam.Parameters.InstanceIds) > 0 {
-		params.InstanceIDs = reqParam.Parameters.InstanceIds
+		params.InstanceIds = reqParam.Parameters.InstanceIds
 	}
 
 	resp, err := svc.DescribeInstances(params)
@@ -124,9 +146,10 @@ func handleDescribeInstances(req *cwRequest, c *middleware.Context) {
 	c.JSON(200, resp)
 }
 
-func HandleRequest(c *middleware.Context) {
+func HandleRequest(c *middleware.Context, ds *m.DataSource) {
 	var req cwRequest
 	req.Body, _ = ioutil.ReadAll(c.Req.Request.Body)
+	req.DataSource = ds
 	json.Unmarshal(req.Body, &req)
 
 	if handler, found := actionHandlers[req.Action]; !found {

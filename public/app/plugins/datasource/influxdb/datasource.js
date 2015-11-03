@@ -77,16 +77,16 @@ function (angular, _, dateMath, InfluxSeries, InfluxQueryBuilder) {
       });
     };
 
-    InfluxDatasource.prototype.annotationQuery = function(annotation, rangeUnparsed) {
-      var timeFilter = getTimeFilter({ range: rangeUnparsed });
-      var query = annotation.query.replace('$timeFilter', timeFilter);
+    InfluxDatasource.prototype.annotationQuery = function(options) {
+      var timeFilter = getTimeFilter({rangeRaw: options.rangeRaw});
+      var query = options.annotation.query.replace('$timeFilter', timeFilter);
       query = templateSrv.replace(query);
 
       return this._seriesQuery(query).then(function(data) {
         if (!data || !data.results || !data.results[0]) {
           throw { message: 'No results in response from InfluxDB' };
         }
-        return new InfluxSeries({ series: data.results[0].series, annotation: annotation }).getAnnotations();
+        return new InfluxSeries({series: data.results[0].series, annotation: options.annotation}).getAnnotations();
       });
     };
 
@@ -169,7 +169,7 @@ function (angular, _, dateMath, InfluxSeries, InfluxQueryBuilder) {
             throw { message: 'InfluxDB Error Response: ' + err.data.error, data: err.data, config: err.config };
           }
           else {
-            throw { messsage: 'InfluxDB Error: ' + err.message, data: err.data, config: err.config };
+            throw { message: 'InfluxDB Error: ' + err.message, data: err.data, config: err.config };
           }
         }
       });
@@ -192,8 +192,12 @@ function (angular, _, dateMath, InfluxSeries, InfluxQueryBuilder) {
         if (date === 'now') {
           return 'now()';
         }
-        if (date.indexOf('now-') >= 0 && date.indexOf('/') === -1) {
-          return date.replace('now', 'now()').replace('-', ' - ');
+
+        var parts = /^now-(\d+)([d|h|m|s])$/.exec(date);
+        if (parts) {
+          var amount = parseInt(parts[1]);
+          var unit = parts[2];
+          return 'now() - ' + amount + unit;
         }
         date = dateMath.parse(date, roundUp);
       }

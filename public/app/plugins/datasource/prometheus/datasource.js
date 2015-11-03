@@ -21,6 +21,7 @@ function (angular, _, moment, dateMath) {
       this.name = datasource.name;
       this.supportMetrics = true;
       this.url = datasource.url;
+      this.directUrl = datasource.directUrl;
       this.basicAuth = datasource.basicAuth;
       this.lastErrors = {};
     }
@@ -98,11 +99,11 @@ function (angular, _, moment, dateMath) {
       var url = '/api/v1/query_range?query=' + encodeURIComponent(query.expr) + '&start=' + start + '&end=' + end;
 
       var step = query.step;
-      var range = Math.floor(end - start);
+      var range = Math.ceil(end - start);
       // Prometheus drop query if range/step > 11000
       // calibrate step if it is too big
       if (step !== 0 && range / step > 11000) {
-        step = Math.floor(range / 11000);
+        step = Math.ceil(range / 11000);
       }
       url += '&step=' + step;
 
@@ -148,20 +149,13 @@ function (angular, _, moment, dateMath) {
             });
           });
         } else {
-          var metric_query = 'count(' + label_values_query[1] + ') by (' +
-                             label_values_query[2]  + ')';
-          url = '/api/v1/query?query=' + encodeURIComponent(metric_query) +
-                    '&time=' + (moment().valueOf() / 1000);
+          url = '/api/v1/series?match[]=' + encodeURIComponent(label_values_query[1]);
 
           return this._request('GET', url)
             .then(function(result) {
-              if (result.data.data.result.length === 0 ||
-                  _.keys(result.data.data.result[0].metric).length === 0) {
-                return [];
-              }
-              return _.map(result.data.data.result, function(metricValue) {
+              return _.map(result.data.data, function(metric) {
                 return {
-                  text: metricValue.metric[label_values_query[2]],
+                  text: metric[label_values_query[2]],
                   expandable: true
                 };
               });
@@ -190,14 +184,13 @@ function (angular, _, moment, dateMath) {
           });
       } else {
         // if query contains full metric name, return metric name and label list
-        url = '/api/v1/query?query=' + encodeURIComponent(interpolated) +
-              '&time=' + (moment().valueOf() / 1000);
+        url = '/api/v1/series?match[]=' + encodeURIComponent(interpolated);
 
         return this._request('GET', url)
           .then(function(result) {
-            return _.map(result.data.data.result, function(metricData) {
+            return _.map(result.data.data, function(metric) {
               return {
-                text: getOriginalMetricName(metricData.metric),
+                text: getOriginalMetricName(metric),
                 expandable: true
               };
             });
@@ -219,7 +212,7 @@ function (angular, _, moment, dateMath) {
         sec = 1;
       }
 
-      return Math.floor(sec * intervalFactor) + 's';
+      return Math.ceil(sec * intervalFactor) + 's';
     };
 
     function transformMetricData(md, options) {
