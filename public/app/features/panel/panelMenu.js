@@ -42,11 +42,16 @@ function (angular, $, _) {
         }
 
         template += '<div class="panel-menu-row">';
-        template += '<a class="panel-menu-link" gf-dropdown="extendedMenu"><i class="fa fa-bars"></i></a>';
+        if ($scope.dashboardMeta.canEdit) {
+          template += '<a class="panel-menu-link" gf-dropdown="extendedMenu"><i class="fa fa-bars"></i></a>';
+        }
 
         _.each($scope.panelMeta.menu, function(item) {
           // skip edit actions if not editor
           if (item.role === 'Editor' && !$scope.dashboardMeta.canEdit) {
+            return;
+          }
+          if (item.text === 'Share' && !$scope.dashboardMeta.canEdit) {
             return;
           }
 
