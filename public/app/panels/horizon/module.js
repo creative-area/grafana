@@ -118,7 +118,7 @@ function (angular, $, app, _, kbn, moment, TimeSeries, PanelMeta) {
     $scope.refreshData = function(datasource) {
       panelHelper.updateTimeRange($scope);
 
-      $scope.annotationsPromise = annotationsSrv.getAnnotations($scope.rangeRaw, $scope.dashboard);
+      $scope.annotationsPromise = annotationsSrv.getAnnotations($scope.dashboard);
 
       return panelHelper.issueMetricQuery($scope, datasource)
         .then($scope.dataHandler, function(err) {
